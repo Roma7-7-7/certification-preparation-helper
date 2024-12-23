@@ -2,18 +2,19 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 )
 
 type LambdaHandler struct {
-	openAIClient   *OpenAIClient
+	messagesStore  *MessagesStore
 	telegramClient *TelegramClient
 	telegramChatID string
 }
 
-func NewLambdaHandler(openAIClient *OpenAIClient, telegramClient *TelegramClient, telegramChatID string) *LambdaHandler {
+func NewLambdaHandler(messagesStore *MessagesStore, telegramClient *TelegramClient, telegramChatID string) *LambdaHandler {
 	return &LambdaHandler{
-		openAIClient:   openAIClient,
+		messagesStore:  messagesStore,
 		telegramClient: telegramClient,
 		telegramChatID: telegramChatID,
 	}
@@ -22,19 +23,14 @@ func NewLambdaHandler(openAIClient *OpenAIClient, telegramClient *TelegramClient
 func (h *LambdaHandler) HandleRequest(ctx context.Context) {
 	slog.InfoContext(ctx, "handle request")
 
-	msg, err := h.openAIClient.GetNextMessage(ctx)
+	msg, err := h.messagesStore.GetRandomMessage()
 	if err != nil {
-		slog.ErrorContext(ctx, "failed to get next message", "error", err)
-	}
-	slog.InfoContext(ctx, "got message")
-
-	if len(msg.Choices) == 0 {
-		slog.InfoContext(ctx, "no choices")
-		return
+		slog.ErrorContext(ctx, "failed to get random message", "error", err)
 	}
 
-	if err = h.telegramClient.SendMessage(ctx, h.telegramChatID, msg.Choices[0].Message.Content); err != nil {
-		slog.ErrorContext(ctx, "failed to send message", "error", err)
+	if err = h.telegramClient.SendMessage(ctx, h.telegramChatID, fmt.Sprintf("===============\n%s", msg.Text)); err != nil {
+		slog.ErrorContext(ctx, "failed to send message", "path", msg.Path, "error", err)
+		_ = h.telegramClient.SendMessage(ctx, h.telegramChatID, fmt.Sprintf("Failed to send message for path %1: %s", msg.Path, err))
 	}
 
 	slog.InfoContext(ctx, "request handled")

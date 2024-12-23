@@ -14,7 +14,6 @@ const defaultAWSRegion = "eu-central-1"
 
 type Config struct {
 	IsDev          bool
-	OpenAIAPIToken string
 	TelegramToken  string
 	TelegramChatID string
 }
@@ -23,9 +22,8 @@ func GetConfig() (*Config, error) {
 	if os.Getenv("ENV") == "dev" {
 		return &Config{
 			IsDev:          true,
-			OpenAIAPIToken: "openai_api_token",
-			TelegramToken:  "telegram_token",
-			TelegramChatID: "telegram_chat_id",
+			TelegramToken:  os.Getenv("TELEGRAM_TOKEN"),
+			TelegramChatID: os.Getenv("TELEGRAM_CHAT_ID"),
 		}, nil
 	}
 
@@ -88,7 +86,6 @@ func GetConfig() (*Config, error) {
 	}
 
 	return &Config{
-		OpenAIAPIToken: openaiAPIToken,
 		TelegramToken:  telegramToken,
 		TelegramChatID: telegramChatID,
 	}, nil

@@ -31,4 +31,5 @@ go.work.sum
 # Other
 data/
 bin/
+messages/
 **/.DS_Store

@@ -25,8 +25,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	store, err := NewMessagesStore()
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to create messages store", "error", err)
+		os.Exit(1)
+	}
+	
 	handler := NewLambdaHandler(
-		NewOpenAIClient(conf.OpenAIAPIToken, httpClient),
+		store,
 		NewTelegramClient(conf.TelegramToken, httpClient),
 		conf.TelegramChatID,
 	)
